@@ -11,15 +11,20 @@ class Bizingo:
         pg.display.set_caption("Bizingo")
         self._t1 = pg.image.load('imgs/t1.png')
         self._t2 = pg.image.load('imgs/t2.png')
-        self.peca_t2 = pg.image.load('imgs/area_selecionada 50x44.png')
-        self.peca_t1 = pg.image.load('imgs/area_selecionada(1) 50x44.png')
+
+        self.area_t2 = pg.image.load('imgs/area_selecionada 50x44.png')
+        self.area_t1 = pg.image.load('imgs/area_selecionada(1) 50x44.png')
+
+        self.peca_t1 = pg.image.load('imgs/peca_preta 50x44.png')
+        self.peca_t2 = pg.image.load('imgs/peca_branca 50x44.png')
+
         self._area_selecionada = False
         self._tabuleiro = []
 
  
     def point_collide(self, point):
         for linha in self._tabuleiro:
-            peca = self.peca_t2
+            peca = self.area_t2
             triangulo = self._t2
             for i in linha:
                 rect = i
@@ -48,10 +53,10 @@ class Bizingo:
                             return rect
                 if triangulo == self._t2:
                     triangulo = self._t1
-                    peca = self.peca_t1
+                    peca = self.area_t1
                 else:
                     triangulo = self._t2
-                    peca = self.peca_t2
+                    peca = self.area_t2
 
     def clear(self):
         self._tela.fill((255, 255, 255))
@@ -132,7 +137,8 @@ class Bizingo:
             elif l == 9 :
                 triangulos -= 2
             else:
-                triangulos += 2  
+                triangulos += 2 
+        self.pecas_iniciais()
 
     def iniciarJogo(self):
         self._tela.fill((255, 255, 255))
@@ -149,6 +155,23 @@ class Bizingo:
                     self.point_collide(mouse_pos)
 
             pg.display.flip()
+
+    def pecas_iniciais(self):
+        for p in range(2):
+            if p == 0:
+                #pretas
+                peca= self.peca_t1
+                x_i = 2
+                x_f = 6
+                for i in range(2,6):
+                    for c in range(len(self._tabuleiro[i])):
+                        rect = self._tabuleiro[i][c]
+                        if x_i<=c<=x_f and c%2 == 0:
+                            self._tela.blit(peca, (rect.x,rect.y ))
+                    x_f += 2
+
+            else:
+                pass
 
 
 
