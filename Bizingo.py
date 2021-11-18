@@ -1,6 +1,9 @@
 import pygame as pg
 from pygame.locals import *
 
+from jogador import Jogador
+from posicao import Posisao
+
 
 # t1 - claro - pretas - 1(peca) - 11(cap)
 # t2 - escuro - brancas - 2(peca) - 22(cap)
@@ -30,6 +33,9 @@ class Bizingo:
         self._tabuleiro = []
         self._pecas = []
 
+        self._jogador1 = Jogador("t1")
+        self._jogador2 = Jogador("t2")
+
  
     def point_collide(self, point):
         for linha in range(len(self._tabuleiro)):
@@ -39,8 +45,8 @@ class Bizingo:
             else:
                 peca = self.area_t1
                 triangulo = self._t1
-            for i in self._tabuleiro[linha]:
-                rect = i["pos"]
+            for c in self._tabuleiro[linha]:
+                rect = c.posicao
                 color = None
                 
                 if triangulo == self._t2:
@@ -67,7 +73,7 @@ class Bizingo:
                                     return rect
                                     
                             else:
-                                self.selectPosicao(i)
+                                self.selectPosicao(c)
                                 self._moverPeca =None
                                 self.clear()
                                 self._area_selecionada = False
@@ -98,8 +104,8 @@ class Bizingo:
         status_j = font_3.render("jogando...", False, (255, 0, 0))
 
         pecas_restantes = font_3.render("Peças restantes:", False, (0, 0, 0))
-        pecas_j1 = font_3.render("Jogador 1 : 7", False, (0, 0, 0))
-        pecas_j2 = font_3.render("Jogador 2 : 10", False, (0, 0, 0))
+        pecas_j1 = font_3.render("Jogador 1 : {}".format(self._jogador1.totalPecas), False, (0, 0, 0))
+        pecas_j2 = font_3.render("Jogador 2 : {}".format(self._jogador2.totalPecas), False, (0, 0, 0))
 
         self._tela.blit(title,(250,0))
 
@@ -125,7 +131,7 @@ class Bizingo:
             if l >= 9:
                 tr = self._t1
             for c in self._tabuleiro[l]:
-                self._tela.blit(tr, (c["pos"].x,c["pos"].y))
+                self._tela.blit(tr, (c.posicao.x,c.posicao.y))
                 if tr == self._t2:
                     tr = self._t1
                 else:
@@ -143,30 +149,37 @@ class Bizingo:
             self._tabuleiro.append([])
             tr = self._t2
             cor = "t2"
+            jogador = self._jogador2
             if l >= 9:
                 tr = self._t1
                 cor = "t1"
+                jogador = self._jogador1
             x = triangulos//2 
             for t in range(triangulos):
                  
                 #negativo
                 if t+1< triangulos//2+1:
-                    self._tabuleiro[l].append({"pos":Rect((meio -25*x+25*t, t_altura*l + 100),(50,44)),"peca":None,"cor":cor, "col": t,"linha": l}) 
+                    rect = Rect((meio -25*x+25*t, t_altura*l + 100),(50,44))
+                    self._tabuleiro[l].append(Posisao(jogador,cor,rect,t,l))  
                 #neutro
                 elif t+1== triangulos//2+1:
-                    self._tabuleiro[l].append({"pos":Rect((meio, t_altura*l + 100),(50,44)),"peca":None,"cor":cor, "col": t,"linha": l})
+                    rect = Rect((meio, t_altura*l + 100),(50,44))
+                    self._tabuleiro[l].append(Posisao(jogador,cor,rect,t,l))
                     x = 1
                 #positivo
                 else:
-                    self._tabuleiro[l].append({"pos":Rect((meio + 25*x, t_altura*l + 100),(50,44)),"peca":None,"cor":cor, "col": t,"linha": l})
+                    rect = Rect((meio + 25*x, t_altura*l + 100),(50,44))
+                    self._tabuleiro[l].append(Posisao(jogador,cor,rect,t,l))
                     x += 1
 
                 if tr == self._t2:
                     tr = self._t1
                     cor = "t1"
+                    jogador = self._jogador1
                 else:
                     tr = self._t2
                     cor = "t2"
+                    jogador = self._jogador2
                 
             if l == 8:
                 pass
@@ -208,12 +221,12 @@ class Bizingo:
                 for i in range(2,6):
                     for c in range(len(self._tabuleiro[i])):
                         if x_i<=c<=x_f and c%2 == 0:
-                            rect = self._tabuleiro[i][c]["pos"]
+                            rect = self._tabuleiro[i][c].posicao
                             if (i == 5) and (c == 4 or c == 10):
-                                self._tabuleiro[i][c]["peca"] = 22
+                                self._tabuleiro[i][c].peca = 22
                                 self._tela.blit(cap, (rect.x,rect.y))
                             else:  
-                                self._tabuleiro[i][c]["peca"] = 2
+                                self._tabuleiro[i][c].peca = 2
                                 self._tela.blit(peca, (rect.x,rect.y ))
                     x_f += 2
             else:
@@ -227,20 +240,20 @@ class Bizingo:
                         x_i += 2
                         for c in range(len(self._tabuleiro[i])):
                             if x_i<=c<=x_f and c%2 != 0:
-                                rect = self._tabuleiro[i][c]["pos"]
+                                rect = self._tabuleiro[i][c].posicao
                                 if (i == 7) and (c == 5 or c == 13):
-                                    self._tabuleiro[i][c]["peca"] = 11
+                                    self._tabuleiro[i][c].peca = 11
                                     self._tela.blit(cap, (rect.x,rect.y- 10))
                                 else:
-                                    self._tabuleiro[i][c]["peca"] = 1    
+                                    self._tabuleiro[i][c].peca = 1    
                                     self._tela.blit(peca, (rect.x,rect.y- 10))       
                     else:
                         x_i += 1
                         x_f -= 1
                         for c in range(len(self._tabuleiro[i])):
                             if x_i<=c<=x_f and c%2 == 0:
-                                rect = self._tabuleiro[i][c]["pos"]
-                                self._tabuleiro[i][c]["peca"] = 1
+                                rect = self._tabuleiro[i][c].posicao
+                                self._tabuleiro[i][c].peca = 1
                                 self._tela.blit(peca, (rect.x,rect.y- 10))
 
     def posPecas(self):
@@ -248,22 +261,22 @@ class Bizingo:
             linha = self._tabuleiro[l]
             for c in range(len(linha)):
                 coluna = linha[c]
-                if coluna["peca"] == None:
+                if coluna.peca == None:
                     pass
-                elif coluna["peca"] == 1 or coluna["peca"] == 11 :
-                    if coluna["peca"] == 1:
+                elif coluna.peca == 1 or coluna.peca == 11 :
+                    if coluna.peca == 1:
                         peca = self.peca_t1
-                        self._tela.blit(peca, (coluna["pos"].x,coluna["pos"].y-10))
+                        self._tela.blit(peca, (coluna.posicao.x,coluna.posicao.y-10))
                     else:
                         cap = self.cap_t1
-                        self._tela.blit(cap, (coluna["pos"].x,coluna["pos"].y-10))
+                        self._tela.blit(cap, (coluna.posicao.x,coluna.posicao.y-10))
                 else:
-                    if coluna["peca"] == 2:
+                    if coluna.peca == 2:
                         peca = self.peca_t2
-                        self._tela.blit(peca, (coluna["pos"].x,coluna["pos"].y))
+                        self._tela.blit(peca, (coluna.posicao.x,coluna.posicao.y))
                     else:
                         cap = self.cap_t2
-                        self._tela.blit(cap, (coluna["pos"].x,coluna["pos"].y))
+                        self._tela.blit(cap, (coluna.posicao.x,coluna.posicao.y))
                
     def selectPeca(self, rect):
         #verificar se tem uma peca na posicao do rect
@@ -272,76 +285,75 @@ class Bizingo:
         # verificra se é valido
         for l in self._tabuleiro:
             for c in l:
-                if c["pos"] == rect and c["peca"] != None:
+                if c.posicao == rect and c.peca != None:
                     return c
 
     def selectPosicao(self, pos):
         #posicao vazia
         
-        if pos["peca"] == None:
+        if pos.peca == None:
             peca = self._moverPeca
             #mesma cor
-            if peca["cor"] == pos["cor"]:
-                cor = peca["cor"]
+            if peca.cor == pos.cor:
+                cor = peca.cor
                 #pretas
                 if cor == "t1":
                     cols = []
-                    if 8 == peca["linha"] and  pos["linha"]== 9 or 9 == peca["linha"] and  pos["linha"]== 8:
-                        cols = [peca["col"]-1,peca["col"]+1]
+                    if 8 == peca.linha and  pos.linha== 9 or 9 == peca.linha and  pos.linha== 8:
+                        cols = [peca.col-1,peca.col+1]
                     else:
-                        if peca["linha"] == pos["linha"]:
-                            cols = [peca["col"]+2,peca["col"]-2]
+                        if peca.linha == pos.linha:
+                            cols = [peca.col+2,peca.col-2]
                            
-                        elif peca["linha"] +1  == pos["linha"]:
-                            if peca["linha"]>8 and pos["linha"]>8:
-                                cols = [peca["col"],peca["col"]-2]
+                        elif peca.linha +1  == pos.linha:
+                            if peca.linha>8 and pos.linha>8:
+                                cols = [peca.col,peca.col-2]
                             else:   
-                                cols = [peca["col"],peca["col"]+2]
+                                cols = [peca.col,peca.col+2]
                             
-                        elif peca["linha"] -1  == pos["linha"]:
-                            if peca["linha"]>8 and pos["linha"]>8:
-                                cols = [peca["col"],peca["col"]+2]
+                        elif peca.linha -1  == pos.linha:
+                            if peca.linha>8 and pos.linha>8:
+                                cols = [peca.col,peca.col+2]
                             else:   
-                                cols = [peca["col"],peca["col"]-2]
-                    #print(pos["col"])
-                    #print(cols)
-                    if pos["col"] in cols:
-                        if peca["peca"] == 11:
-                            pos["peca"] = 11
+                                cols = [peca.col,peca.col-2]
+                    
+                    if pos.col in cols:
+                        if peca.peca == 11:
+                            pos.peca = 11
                         else:
-                            pos["peca"] = 1
-                        peca["peca"] = None
+                            pos.peca = 1
+                        peca.peca = None
                         return True
                 #brancas
                 else:
                     cols = []
-                    if 8 == peca["linha"] and  pos["linha"]== 9 or 9 == peca["linha"] and  pos["linha"]== 8:
-                        cols = [peca["col"]-1,peca["col"]+1]
+                    if 8 == peca.linha and  pos.linha== 9 or 9 == peca.linha and  pos.linha== 8:
+                        cols = [peca.col-1,peca.col+1]
                     else:
-                        if peca["linha"] == pos["linha"]:
-                            cols = [peca["col"]+2,peca["col"]-2]
+                        if peca.linha == pos.linha:
+                            cols = [peca.col+2,peca.col-2]
                            
-                        elif peca["linha"] +1  == pos["linha"]:
-                            if peca["linha"]>8 and pos["linha"]>8:
-                                cols = [peca["col"],peca["col"]-2]
+                        elif peca.linha +1  == pos.linha:
+                            if peca.linha>8 and pos.linha>8:
+                                cols = [peca.col,peca.col-2]
                             else:   
-                                cols = [peca["col"],peca["col"]+2]
+                                cols = [peca.col,peca.col+2]
                             
-                        elif peca["linha"] -1  == pos["linha"]:
-                            if peca["linha"]>8 and pos["linha"]>8:
-                                cols = [peca["col"],peca["col"]+2]
+                        elif peca.linha -1  == pos.linha:
+                            if peca.linha>8 and pos.linha>8:
+                                cols = [peca.col,peca.col+2]
                             else:   
-                                cols = [peca["col"],peca["col"]-2]
+                                cols = [peca.col,peca.col-2]
                            
-                    if pos["col"] in cols:
-                        if peca["peca"] == 22:
-                            pos["peca"] = 22
+                    if pos.col in cols:
+                        if peca.peca == 22:
+                            pos.peca = 22
                         else:
-                            pos["peca"] = 2
-                        peca["peca"] = None
+                            pos.peca = 2
+                        peca.peca = None
                         return True
 
-        
+    
                    
                                 
 Bizingo().iniciarJogo()
