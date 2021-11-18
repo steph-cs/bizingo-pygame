@@ -1,6 +1,9 @@
 import pygame as pg
 from pygame.locals import *
 
+
+# t1 - claro - pretas - 1(peca) - 11(cap)
+# t2 - escuro - brancas - 2(peca) - 22(cap)
 #cores
 clara = [(114, 199, 225),'#72c7e1']
 escura = [(0, 155, 160),'#009BA0']
@@ -22,6 +25,7 @@ class Bizingo:
 
         self._area_selecionada = False
         self._tabuleiro = []
+        self._pecas = []
 
  
     def point_collide(self, point):
@@ -33,7 +37,7 @@ class Bizingo:
                 peca = self.area_t1
                 triangulo = self._t1
             for i in self._tabuleiro[linha]:
-                rect = i
+                rect = i["pos"]
                 color = None
                 
                 if triangulo == self._t2:
@@ -64,10 +68,11 @@ class Bizingo:
                 else:
                     triangulo = self._t2
                     peca = self.area_t2
-
+            
     def clear(self):
         self._tela.fill((255, 255, 255))
-        self.tabuleiro()
+        self.construirTabuleiro()
+        self.posPecas()
         self.textos()
 
     def textos(self):            
@@ -104,7 +109,20 @@ class Bizingo:
         pg.draw.line(self._tela,(0,0,0),(650,50),(950,50),5)
         pg.draw.line(self._tela,(0,0,0),(650,600),(950,600),5)
 
-    def tabuleiro(self):
+    def construirTabuleiro(self):
+        for l in range(11):
+            tr = self._t2
+            if l >= 9:
+                tr = self._t1
+            for c in self._tabuleiro[l]:
+                self._tela.blit(tr, (c["pos"].x,c["pos"].y))
+                if tr == self._t2:
+                    tr = self._t1
+                else:
+                    tr = self._t2
+
+    def matrizTabuleiro(self):
+    
         t_altura = 44
         t_largura = 50
         #meio ponto 325 , x_meio 325 - 25 (metade da largura do triangulo)
@@ -118,22 +136,19 @@ class Bizingo:
                 tr = self._t1
             x = triangulos//2 
             for t in range(triangulos):
-                
+                 
                 #negativo
                 if t+1< triangulos//2+1:
-                    self._tabuleiro[l].append(Rect((meio -25*x+25*t, t_altura*l + 100),(50,44))) 
-                    self._tela.blit(tr, (meio -25*x+25*t, t_altura*l + 100))
+                    self._tabuleiro[l].append({"pos":Rect((meio -25*x+25*t, t_altura*l + 100),(50,44)),"peca":None}) 
                 #neutro
                 elif t+1== triangulos//2+1:
-                    self._tabuleiro[l].append(Rect((meio, t_altura*l + 100),(50,44)))
-                    self._tela.blit(tr, (meio, t_altura*l + 100))
+                    self._tabuleiro[l].append({"pos":Rect((meio, t_altura*l + 100),(50,44)),"peca":None})
                     x = 1
                 #positivo
                 else:
-                    self._tabuleiro[l].append(Rect((meio + 25*x, t_altura*l + 100),(50,44)))
-                    self._tela.blit(tr, (meio + 25*x, t_altura*l + 100))
+                    self._tabuleiro[l].append({"pos":Rect((meio + 25*x, t_altura*l + 100),(50,44)),"peca":None})
                     x += 1
-                
+
                 if tr == self._t2:
                     tr = self._t1
                 else:
@@ -144,13 +159,14 @@ class Bizingo:
             elif l == 9 :
                 triangulos -= 2
             else:
-                triangulos += 2 
-        self.pecas_iniciais()
+                triangulos += 2
 
     def iniciarJogo(self):
         self._tela.fill((255, 255, 255))
         
-        self.tabuleiro()
+        self.matrizTabuleiro()
+        self.construirTabuleiro()
+        self.pecas_iniciais()
         self.textos()
         while True:
             mouse_pos = pg.mouse.get_pos()
@@ -173,14 +189,15 @@ class Bizingo:
                 x_f = 6
                 for i in range(2,6):
                     for c in range(len(self._tabuleiro[i])):
-                        rect = self._tabuleiro[i][c]
                         if x_i<=c<=x_f and c%2 == 0:
+                            rect = self._tabuleiro[i][c]["pos"]
                             if (i == 5) and (c == 4 or c == 10):
+                                self._tabuleiro[i][c]["peca"] = 22
                                 self._tela.blit(cap, (rect.x,rect.y))
                             else:  
+                                self._tabuleiro[i][c]["peca"] = 2
                                 self._tela.blit(peca, (rect.x,rect.y ))
                     x_f += 2
-
             else:
                 #pretas
                 peca= self.peca_t1
@@ -191,22 +208,45 @@ class Bizingo:
                     if i < 9:
                         x_i += 2
                         for c in range(len(self._tabuleiro[i])):
-                            rect = self._tabuleiro[i][c]
                             if x_i<=c<=x_f and c%2 != 0:
+                                rect = self._tabuleiro[i][c]["pos"]
                                 if (i == 7) and (c == 5 or c == 13):
+                                    self._tabuleiro[i][c]["peca"] = 11
                                     self._tela.blit(cap, (rect.x,rect.y- 10))
-                                else:    
+                                else:
+                                    self._tabuleiro[i][c]["peca"] = 1    
                                     self._tela.blit(peca, (rect.x,rect.y- 10))       
                     else:
                         x_i += 1
                         x_f -= 1
                         for c in range(len(self._tabuleiro[i])):
-                            rect = self._tabuleiro[i][c]
                             if x_i<=c<=x_f and c%2 == 0:
+                                rect = self._tabuleiro[i][c]["pos"]
+                                self._tabuleiro[i][c]["peca"] = 1
                                 self._tela.blit(peca, (rect.x,rect.y- 10))
 
-                   
-
+    def posPecas(self):
+        for l in range(11):
+            linha = self._tabuleiro[l]
+            for c in range(len(linha)):
+                coluna = linha[c]
+                if coluna["peca"] == None:
+                    pass
+                elif coluna["peca"] == 1 or coluna["peca"] == 11 :
+                    if coluna["peca"] == 1:
+                        peca = self.peca_t1
+                        self._tela.blit(peca, (coluna["pos"].x,coluna["pos"].y-10))
+                    else:
+                        cap = self.cap_t1
+                        self._tela.blit(cap, (coluna["pos"].x,coluna["pos"].y-10))
+                else:
+                    if coluna["peca"] == 2:
+                        peca = self.peca_t2
+                        self._tela.blit(peca, (coluna["pos"].x,coluna["pos"].y))
+                    else:
+                        cap = self.cap_t2
+                        self._tela.blit(cap, (coluna["pos"].x,coluna["pos"].y))
+               
 
 
 Bizingo().iniciarJogo()
