@@ -16,17 +16,23 @@ class Bizingo:
         self.area_t1 = pg.image.load('imgs/area_selecionada(1) 50x44.png')
 
         self.peca_t1 = pg.image.load('imgs/peca_preta 50x44.png')
+        self.cap_t1 = pg.image.load('imgs/cap_preta 50x44.png')
         self.peca_t2 = pg.image.load('imgs/peca_branca 50x44.png')
+        self.cap_t2 = pg.image.load('imgs/cap_branca 50x44.png')
 
         self._area_selecionada = False
         self._tabuleiro = []
 
  
     def point_collide(self, point):
-        for linha in self._tabuleiro:
-            peca = self.area_t2
-            triangulo = self._t2
-            for i in linha:
+        for linha in range(len(self._tabuleiro)):
+            if linha <= 8:
+                peca = self.area_t2
+                triangulo = self._t2
+            else:
+                peca = self.area_t1
+                triangulo = self._t1
+            for i in self._tabuleiro[linha]:
                 rect = i
                 color = None
                 
@@ -51,6 +57,7 @@ class Bizingo:
                                 self.clear()
                                 self._area_selecionada = False
                             return rect
+                
                 if triangulo == self._t2:
                     triangulo = self._t1
                     peca = self.area_t1
@@ -159,19 +166,46 @@ class Bizingo:
     def pecas_iniciais(self):
         for p in range(2):
             if p == 0:
-                #pretas
-                peca= self.peca_t1
+                #brancas
+                peca= self.peca_t2
+                cap = self.cap_t2
                 x_i = 2
                 x_f = 6
                 for i in range(2,6):
                     for c in range(len(self._tabuleiro[i])):
                         rect = self._tabuleiro[i][c]
                         if x_i<=c<=x_f and c%2 == 0:
-                            self._tela.blit(peca, (rect.x,rect.y ))
+                            if (i == 5) and (c == 4 or c == 10):
+                                self._tela.blit(cap, (rect.x,rect.y))
+                            else:  
+                                self._tela.blit(peca, (rect.x,rect.y ))
                     x_f += 2
 
             else:
-                pass
+                #pretas
+                peca= self.peca_t1
+                cap = self.cap_t1
+                x_i = 1
+                x_f = 15
+                for i in range(7,10):
+                    if i < 9:
+                        x_i += 2
+                        for c in range(len(self._tabuleiro[i])):
+                            rect = self._tabuleiro[i][c]
+                            if x_i<=c<=x_f and c%2 != 0:
+                                if (i == 7) and (c == 5 or c == 13):
+                                    self._tela.blit(cap, (rect.x,rect.y- 10))
+                                else:    
+                                    self._tela.blit(peca, (rect.x,rect.y- 10))       
+                    else:
+                        x_i += 1
+                        x_f -= 1
+                        for c in range(len(self._tabuleiro[i])):
+                            rect = self._tabuleiro[i][c]
+                            if x_i<=c<=x_f and c%2 == 0:
+                                self._tela.blit(peca, (rect.x,rect.y- 10))
+
+                   
 
 
 
