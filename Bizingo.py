@@ -70,6 +70,7 @@ class Bizingo:
                                 if self._area_selecionada == False:
                                     self._tela.blit(peca, (rect.x,rect.y))
                                     self._area_selecionada = True
+                                    
                                     return rect
                                     
                             else:
@@ -207,6 +208,7 @@ class Bizingo:
                         c =self.selectPeca(rect)
                         if c != None:
                             self._moverPeca = c
+                            self.posValidas()
 
             pg.display.flip()
 
@@ -353,7 +355,43 @@ class Bizingo:
                         peca.peca = None
                         return True
 
-    
+    def posValidas(self):
+        pos = self._moverPeca
+        l = pos.linha
+        c = pos.col
+        if l < 8:
+            cols = [(l,c+2),(l,c-2),
+            (l+1,c),(l+1,c+2),
+            (l-1,c), (l-1,c-2)]
+        elif l == 8:
+            cols = [(l,c+2),(l,c-2),
+            (l+1,c+1),(l+1,c-1),
+            (l-1,c),(l-1,c-2)]
+        elif l == 9:
+            cols = [(l,c+2),(l,c-2),
+            (l+1,c),(l+1,c-2),
+            (l-1,c+1),(l-1,c-1)]
+        else:
+            cols = [(l,c+2),(l,c-2),
+            (l+1,c),(l+1,c-2),
+            (l-1,c),(l-1,c+2)]
+ 
+        for i in cols:
+            l,c = i
+            if(l>=0 and c >= 0):
+                try:
+                    p = self._tabuleiro[l][c]
+                    if p.peca == None:
+                        if p.cor == "t1":
+                            cor = (0,0,0)
+                        else:
+                            cor = (255,255,255)
+                        pg.draw.circle(self._tela,cor,(p.posicao.x + 25,p.posicao.y +22,),5) 
+                except IndexError:
+                    pass
+            
+                
+               
                    
                                 
 Bizingo().iniciarJogo()
