@@ -4,8 +4,8 @@ from posicao import Posisao
 
 class Tabuleiro():
     def __init__(self):
-        self._jogador1 = Jogador("t1")
-        self._jogador2 = Jogador("t2")
+        self._jogador1 = Jogador(1)
+        self._jogador2 = Jogador(2)
 
         self._tabuleiro = []
 
