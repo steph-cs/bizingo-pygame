@@ -2,7 +2,7 @@ from pygame import rect
 from jogador import Jogador
 
 class Posisao():
-    def __init__(self, jogador:Jogador, cor:str,posicao:rect, col:int, linha:int, peca:int=None):
+    def __init__(self, jogador:Jogador, cor:int,posicao:rect, col:int, linha:int, peca:int=None):
         self._jogador = jogador
         self._cor = cor
         self._posicao = posicao
