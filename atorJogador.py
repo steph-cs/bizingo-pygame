@@ -22,14 +22,12 @@ class AtorJogador:
         self._tabuleiro.matrizTabuleiro()
         self._matrizTabuleiro = self._tabuleiro.matriz()
 
- 
     def point_collide(self, point):
+        self.notificacao = 0
         for linha in range(len(self._matrizTabuleiro)):
             if linha <= 8:
-                peca = self.area_t2
                 triangulo = self._t2
             else:
-                peca = self.area_t1
                 triangulo = self._t1
             for c in self._matrizTabuleiro[linha]:
                 rect = c.posicao
@@ -47,52 +45,67 @@ class AtorJogador:
                 #detects if click hits the image
                 if 0 <= x < 50:
                     if 0 <= y < 44:
-                        #detects if color at clicking position != colorkey-color(transparent)
+                        #detects if color at clicking position != colorkey-color
                         if triangulo.get_at((x,y))[0:3] == color:
                             if self._moverPeca == None:
                                 if self._area_selecionada != False:
-                                    self.clear()
+                                    self.estado = 0
+                                    self.atualizarInterface()
                                     self._area_selecionada = False
                                 if self._area_selecionada == False:
-                                    self._tela.blit(peca, (rect.x,rect.y))
-                                    self._area_selecionada = True
-                                    
-                                    return rect
-                                    
+                                    return c
                             else:
                                 self.selectPosicao(c)
                                 self._moverPeca =None
-                                self.clear()
+                                self.atualizarInterface()
                                 self._area_selecionada = False
                                
                 if triangulo == self._t2:
                     triangulo = self._t1
-                    peca = self.area_t1
                 else:
                     triangulo = self._t2
-                    peca = self.area_t2
-            
-    def clear(self):
+
+    def atualizarInterface(self):
         self._tela.fill((255, 255, 255))
         self.construirTabuleiro()
         self.posPecas()
-        self.textos()
+        self.exibirEstado()
 
-    def textos(self):            
+    def atualizarEstado(self):
+        estados = {
+            0 : "selecione uma peca",
+            1 : "selecione uma posicao"
+        }
+        notificacoes = {
+            0 : "",
+            1 : "*movimento invalido",
+            2 : "*movimento realizado"
+        }
+        self.estadoMsg = estados[self.estado]
+        self.notificacaoMsg = notificacoes[self.notificacao]
+
+    def exibirEstado(self):            
         font_1 = pg.font.SysFont('Comic Sans MS', 50)
         font_2 = pg.font.SysFont('Comic Sans MS', 40)
         font_3 = pg.font.SysFont('Comic Sans MS', 20)
 
         title = font_1.render('Bizingo', False, (0, 0, 0))
         vez = font_2.render('Vez de:', False, (0, 0, 0))
-        jogador = font_2.render("Jogador 1", False, (0, 0, 0))
+        jogador = font_2.render(self._tabuleiro.vez().nome, False, (0, 0, 0))
 
-        status = font_3.render("Staus:", False, (255, 0, 0))
-        status_j = font_3.render("jogando...", False, (255, 0, 0))
+        self.atualizarEstado()
+
+        self.estadoM = self._tabuleiro.estado()
+        status = font_3.render("Status:", False, (255, 0, 0))
+        status_j = font_3.render(self.estadoMsg, False, (255, 0, 0))
+
+        notificacao = font_3.render(self.notificacaoMsg, False, (255, 0, 0))
 
         pecas_restantes = font_3.render("Peças restantes:", False, (0, 0, 0))
         pecas_j1 = font_3.render("Jogador 1 : {}".format(self._tabuleiro.jogador1().totalPecas), False, (0, 0, 0))
         pecas_j2 = font_3.render("Jogador 2 : {}".format(self._tabuleiro.jogador2().totalPecas), False, (0, 0, 0))
+
+        self._tela.blit(notificacao,(730,70))
 
         self._tela.blit(title,(250,0))
 
@@ -100,7 +113,7 @@ class AtorJogador:
         self._tela.blit(jogador,(700,200))
 
         self._tela.blit(status,(770,300))
-        self._tela.blit(status_j,(750,330))
+        self._tela.blit(status_j,(710,320))
 
         self._tela.blit(pecas_restantes,(720,400))
         self._tela.blit(pecas_j1,(700,430))
@@ -141,7 +154,9 @@ class AtorJogador:
         
         self.construirTabuleiro()
         self.pecas_iniciais()
-        self.textos()
+        self.estado = 0
+        self.notificacao = 0
+        self.exibirEstado()
         while True:
             mouse_pos = pg.mouse.get_pos()
             for event in pg.event.get():
@@ -149,13 +164,12 @@ class AtorJogador:
                     pg.quit()
                     exit()
                 if event.type == MOUSEBUTTONDOWN:
-                    rect = self.point_collide(mouse_pos)
-                    if( rect != None):
-                        c =self.selectPeca(rect)
+                    pos = self.point_collide(mouse_pos)
+                    if( pos != None):
+                        c =self.selectPeca(pos)
                         if c != None:
                             self._moverPeca = c
                             self.posValidas()
-
             pg.display.flip()
 
     def pecas_iniciais(self):
@@ -226,26 +240,33 @@ class AtorJogador:
                         cap = self.cap_t2
                         self._tela.blit(cap, (coluna.posicao.x,coluna.posicao.y))
                
-    def selectPeca(self, rect):
+    def selectPeca(self, pos):
         #verificar se tem uma peca na posicao do rect
         # se sim... captar outro clique
         # vreificar se esta vazio
         # verificra se é valido
         for l in self._matrizTabuleiro:
             for c in l:
-                if c.posicao == rect and c.peca != None:
+                if c.posicao == pos.posicao and c.peca != None:
+                    self.estado = 1
+                    self.atualizarInterface()
+                    if pos.cor == 0:
+                        peca = self.area_t1
+                    else:
+                        peca = self.area_t2
+                    self._tela.blit(peca, (pos.posicao.x,pos.posicao.y))
+                    self._area_selecionada = True
                     return c
 
     def selectPosicao(self, pos):
         #posicao vazia
-        
         if pos.peca == None:
             peca = self._moverPeca
             #mesma cor
             if peca.cor == pos.cor:
                 cor = peca.cor
                 #pretas
-                if cor == "t1":
+                if cor == 0:
                     cols = []
                     if 8 == peca.linha and  pos.linha== 9 or 9 == peca.linha and  pos.linha== 8:
                         cols = [peca.col-1,peca.col+1]
@@ -266,11 +287,8 @@ class AtorJogador:
                                 cols = [peca.col,peca.col-2]
                     
                     if pos.col in cols:
-                        if peca.peca == 11:
-                            pos.peca = 11
-                        else:
-                            pos.peca = 1
-                        peca.peca = None
+                        self._tabuleiro.efetuarMovimentacaoPeca(peca,pos)
+                        self.moverPeca()
                         return True
                 #brancas
                 else:
@@ -294,13 +312,15 @@ class AtorJogador:
                                 cols = [peca.col,peca.col-2]
                            
                     if pos.col in cols:
-                        if peca.peca == 22:
-                            pos.peca = 22
-                        else:
-                            pos.peca = 2
-                        peca.peca = None
+                        self.moverPeca(peca,pos)
                         return True
-
+        self.notificacao = 1
+        self.estado = 0
+        
+    def moverPeca(self):
+        self.estado = 0
+        self.notificacao = 2
+        
     def posValidas(self):
         pos = self._moverPeca
         l = pos.linha
@@ -328,7 +348,7 @@ class AtorJogador:
                 try:
                     p = self._matrizTabuleiro[l][c]
                     if p.peca == None:
-                        if p.cor == "t1":
+                        if p.cor == 0:
                             cor = (0,0,0)
                         else:
                             cor = (255,255,255)
