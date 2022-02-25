@@ -25,7 +25,7 @@ class AtorJogador:
         self._jogadorVez = self._tabuleiro.jogadorVez()
 
     def point_collide(self, point):
-        self.notificacao = 0
+        self.notificacao = None
         for linha in range(len(self._matrizTabuleiro)):
             if linha <= 8:
                 triangulo = self._t2
@@ -57,10 +57,13 @@ class AtorJogador:
                                 if self._area_selecionada == False:
                                     return c
                             else:
-                                self.selectPosicao(c)
-                                self._moverPeca =None
-                                self.atualizarInterface()
-                                self._area_selecionada = False
+                                
+                                if self.selectPosicao(c) == 0:
+                                    return 0
+                                else:
+                                    self._moverPeca =None
+                                    self.atualizarInterface()
+                                    self._area_selecionada = False
                                
                 if triangulo == self._t2:
                     triangulo = self._t1
@@ -85,7 +88,7 @@ class AtorJogador:
         self.construirTabuleiro()
         self.pecas_iniciais()
         self.estado = 0
-        self.notificacao = 0
+        self.notificacao = None
         self.exibirEstado()
         while True:
             mouse_pos = pg.mouse.get_pos()
@@ -94,12 +97,15 @@ class AtorJogador:
                     pg.quit()
                     exit()
                 if event.type == MOUSEBUTTONDOWN:
-                    pos = self.point_collide(mouse_pos)
-                    if( pos != None):
-                        c =self.selectPeca(pos)
-                        if c != None:
-                            self._moverPeca = c
-                            self.posValidas()
+                    if self._tabuleiro.vencedor() == None:
+                        pos = self.point_collide(mouse_pos)
+                        if pos == 0:
+                            pass
+                        elif( pos != None):
+                            c =self.selectPeca(pos)
+                            if c != None:
+                                self._moverPeca = c
+                                self.posValidas()
             pg.display.flip()
 
     def atualizarInterface(self):
@@ -197,7 +203,7 @@ class AtorJogador:
             1 : "selecione uma posicao"
         }
         notificacoes = {
-            0 : "",
+            None : "",
             1 : "*movimento invalido",
             2 : "*movimento realizado",
             3 : "*peca oponente capturada",
@@ -226,7 +232,7 @@ class AtorJogador:
         pecas_j1 = font_3.render("Jogador 1 : {}".format(self._tabuleiro.jogador1().totalPecas), False, (0, 0, 0))
         pecas_j2 = font_3.render("Jogador 2 : {}".format(self._tabuleiro.jogador2().totalPecas), False, (0, 0, 0))
 
-        self._tela.blit(notificacao,(730,70))
+        self._tela.blit(notificacao,(655,70))
 
         self._tela.blit(title,(250,0))
 
@@ -270,14 +276,10 @@ class AtorJogador:
             self.efetuarMovimentacaoPeca(peca, pos)
             captura =  self.avaliarCapturas(pos)
             if captura != None:
-                #peca oponente capturada
-                if captura == 0:
-                    self.notificacao = 3
-                else:
-                #peca capturada pelo oponente
-                   self.notificacao = 4
+                self.notificacao = captura
             if self.avaliarEncerramentoPartida():
                 self.encerrarPartida()
+                return 0
             self._tabuleiro.habilitarOutroJogador()
             return True
         self.notificacao = 1
@@ -327,10 +329,10 @@ class AtorJogador:
         return self._tabuleiro.avaliarCapturas(pos)
 
     def avaliarEncerramentoPartida(self):
-        self._tabuleiro.avaliarEncerramentoPartida()
+        return self._tabuleiro.avaliarEncerramentoPartida()
 
     def encerrarPartida(self):
-        self._tela.fill((255, 255, 255))
+        self._tela.fill((0,0,0))
         font_1 = pg.font.SysFont('Comic Sans MS', 50)
-        title = font_1.render('Game Over', False, (0, 0, 0))
-        self._tela.blit(title,(250,0))
+        jogador = font_1.render("{} ganhou o jogo!".format(self._tabuleiro.vencedor().nome), False, (255,255,255))
+        self._tela.blit(jogador,(250,285))
