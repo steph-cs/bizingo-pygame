@@ -10,7 +10,7 @@ from tabuleiro import Tabuleiro
 #clara = [(114, 199, 225),'#72c7e1']
 #escura = [(0, 155, 160),'#009BA0']
 
-class AtorJogador:
+class interfaceJogador:
     def __init__(self):
         pg.init()
         self._tela = pg.display.set_mode((1000,650))
