@@ -1,5 +1,5 @@
-from atorJogador import AtorJogador
+from interfaceJogador import interfaceJogador
 
-AtorJogador().iniciarJogo()
+interfaceJogador().iniciarJogo()
 
 
