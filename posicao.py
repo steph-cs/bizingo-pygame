@@ -15,7 +15,7 @@ class Posisao():
         return self._jogador
     
     @jogador.setter
-    def jogador(self, jogador:jogador):
+    def jogador(self, jogador: Jogador):
         self._jogador = jogador
 
     @property

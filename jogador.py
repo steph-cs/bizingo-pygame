@@ -1,5 +1,4 @@
 
-
 class Jogador:
     def __init__(self, peca:int):
         self._peca = peca

@@ -18,12 +18,12 @@ class interfaceJogador:
         self._area_selecionada = False
         self._moverPeca = None
         
-
         self._tabuleiro = Tabuleiro()
-        self._tabuleiro.matrizTabuleiro()
+        self._tabuleiro.construirMatrizTabuleiro()
         self._matrizTabuleiro = self._tabuleiro.matriz()
         self._jogadorVez = self._tabuleiro.jogadorVez()
 
+#deteccao click tabuleiro
     def point_collide(self, point):
         self.notificacao = None
         for linha in range(len(self._matrizTabuleiro)):
@@ -50,7 +50,7 @@ class interfaceJogador:
                         #detects if color at clicking position != colorkey-color
                         if triangulo.get_at((x,y))[0:3] == color:
                             if self._moverPeca == None:
-                                if self._area_selecionada != False:
+                                if self._area_selecionada:
                                     self.estado = 0
                                     self.atualizarInterface()
                                     self._area_selecionada = False
@@ -58,18 +58,17 @@ class interfaceJogador:
                                     return c
                             else:
                                 
-                                if self.selectPosicao(c) == 0:
+                                if self.selecionarPosicao(c) == 0:
                                     return 0
                                 else:
-                                    self._moverPeca =None
-                                    self.atualizarInterface()
-                                    self._area_selecionada = False
-                               
+                                    
+                                    self._area_selecionada = False             
                 if triangulo == self._t2:
                     triangulo = self._t1
                 else:
                     triangulo = self._t2
 
+#iniciar jogo/ loop jogo
     def iniciarJogo(self):
         self._tela.fill((255, 255, 255))
         pg.display.set_caption("Bizingo")
@@ -86,7 +85,7 @@ class interfaceJogador:
         
         
         self.construirTabuleiro()
-        self.pecas_iniciais()
+        self.posicionarPecasIniciais()
         self.estado = 0
         self.notificacao = None
         self.exibirEstado()
@@ -102,19 +101,10 @@ class interfaceJogador:
                         if pos == 0:
                             pass
                         elif( pos != None):
-                            c =self.selectPeca(pos)
-                            if c != None:
-                                self._moverPeca = c
-                                self.posValidas()
+                            self.selecionarPeca(pos)
             pg.display.flip()
 
-    def atualizarInterface(self):
-        self._tela.fill((255, 255, 255))
-        self.construirTabuleiro()
-        self.posPecas()
-        self._jogadorVez = self._tabuleiro.jogadorVez()
-        self.exibirEstado()
-
+#construcao elementos jogo na interface
     def construirTabuleiro(self):
         for l in range(11):
             tr = self._t2
@@ -127,7 +117,7 @@ class interfaceJogador:
                 else:
                     tr = self._t2
 
-    def pecas_iniciais(self):
+    def posicionarPecasIniciais(self):
         #criacao na matriz e posicionamento na interface das pecas iniciais
         for p in range(2):
             if p == 0:
@@ -174,43 +164,36 @@ class interfaceJogador:
                                 self._matrizTabuleiro[i][c].peca = 1
                                 self._tela.blit(peca, (rect.x,rect.y- 10))
 
-    def posPecas(self):
+    def posicionarPecas(self):
         # posicionamento atual das pecas (*atualizacao interface)
         for l in range(11):
             linha = self._matrizTabuleiro[l]
             for c in range(len(linha)):
-                coluna = linha[c]
-                if coluna.peca == None:
+                pos = linha[c]
+                if pos.peca == None:
                     pass
-                elif coluna.peca == 1 or coluna.peca == 11 :
-                    if coluna.peca == 1:
+                elif pos.cor == 0 :
+                    if pos.peca == 1:
                         peca = self.peca_t1
-                        self._tela.blit(peca, (coluna.posicao.x,coluna.posicao.y-10))
+                        self._tela.blit(peca, (pos.posicao.x,pos.posicao.y-10))
                     else:
                         cap = self.cap_t1
-                        self._tela.blit(cap, (coluna.posicao.x,coluna.posicao.y-10))
+                        self._tela.blit(cap, (pos.posicao.x,pos.posicao.y-10))
                 else:
-                    if coluna.peca == 2:
+                    if pos.peca == 2:
                         peca = self.peca_t2
-                        self._tela.blit(peca, (coluna.posicao.x,coluna.posicao.y))
+                        self._tela.blit(peca, (pos.posicao.x,pos.posicao.y))
                     else:
                         cap = self.cap_t2
-                        self._tela.blit(cap, (coluna.posicao.x,coluna.posicao.y))
-  
-    def atualizarEstado(self):
-        estados = {
-            0 : "selecione uma peca",
-            1 : "selecione uma posicao"
-        }
-        notificacoes = {
-            None : "",
-            1 : "*movimento invalido",
-            2 : "*movimento realizado",
-            3 : "*peca oponente capturada",
-            4 : "*peca capturada pelo oponente"
-        }
-        self.estadoMsg = estados[self.estado]
-        self.notificacaoMsg = notificacoes[self.notificacao]
+                        self._tela.blit(cap, (pos.posicao.x,pos.posicao.y))
+
+#atualizazao de estado/ interface
+    def atualizarInterface(self):
+        self._tela.fill((255, 255, 255))
+        self.construirTabuleiro()
+        self.posicionarPecas()
+        self._jogadorVez = self._tabuleiro.jogadorVez()
+        self.exibirEstado()
 
     def exibirEstado(self):            
         font_1 = pg.font.SysFont('Comic Sans MS', 50)
@@ -251,82 +234,73 @@ class interfaceJogador:
 
         pg.draw.line(self._tela,(0,0,0),(650,50),(950,50),5)
         pg.draw.line(self._tela,(0,0,0),(650,600),(950,600),5)
-             
-    def selectPeca(self, pos):
-        #verificar se tem uma peca na posicao do rect
-        # se sim... captar outro clique
-        # vreificar se esta vazio
-        # verificra se é valido
-        for l in self._matrizTabuleiro:
-            for c in l:
-                if c.posicao == pos.posicao and c.peca != None and c.jogador == self._jogadorVez:
-                    self.estado = 1
-                    self.atualizarInterface()
-                    if pos.cor == 0:
-                        peca = self.area_t1
-                    else:
-                        peca = self.area_t2
-                    self._tela.blit(peca, (pos.posicao.x,pos.posicao.y))
-                    self._area_selecionada = True
-                    return c
 
-    def selectPosicao(self, pos):
+    def atualizarEstado(self):
+        estados = {
+            0 : "selecione uma peca",
+            1 : "selecione uma posicao"
+        }
+        notificacoes = {
+            None : "",
+            1 : "*movimento invalido",
+            2 : "*movimento realizado",
+            3 : "*peca oponente capturada",
+            4 : "*peca capturada pelo oponente"
+        }
+        self.estadoMsg = estados[self.estado]
+        self.notificacaoMsg = notificacoes[self.notificacao]
+
+#selecao peca        
+    def selecionarPeca(self, pos):
+        if pos.peca != None and pos.jogador == self._jogadorVez:
+            self.estado = 1
+            self.atualizarInterface()
+            if pos.cor == 0:
+                peca = self.area_t1
+            else:
+                peca = self.area_t2
+            self._tela.blit(peca, (pos.posicao.x,pos.posicao.y))
+            self._area_selecionada = True
+            self._moverPeca = pos
+            self.exibirPosicoesValidas()
+
+    def exibirPosicoesValidas(self):
+        pos = self._moverPeca
+        cols = self._tabuleiro.posicoesAdjacentes(pos, 'V')
+        for p in cols:
+            if p.peca == None:
+                if p.cor == 0:
+                    cor = (0,0,0)
+                else:
+                    cor = (255,255,255)
+                pg.draw.circle(self._tela,cor,(p.posicao.x + 25,p.posicao.y +22,),5) 
+
+#selecao nova posicao
+    def selecionarPosicao(self, pos):
         peca = self._moverPeca
         if self._tabuleiro.avaliarPosicao(peca, pos):
             self.efetuarMovimentacaoPeca(peca, pos)
-            captura =  self.avaliarCapturas(pos)
-            if captura != None:
-                self.notificacao = captura
+            self.avaliarCapturas(pos)
             if self.avaliarEncerramentoPartida():
                 self.encerrarPartida()
                 return 0
             self._tabuleiro.habilitarOutroJogador()
-            return True
-        self.notificacao = 1
-        self.estado = 0
+        else:
+            self.notificacao = 1
+            self.estado = 0
+        self._moverPeca =None
+        self.atualizarInterface() 
         
     def efetuarMovimentacaoPeca(self, peca,pos):
         self._tabuleiro.efetuarMovimentacaoPeca(peca,pos)
         self.estado = 0
         self.notificacao = 2
         
-    def posValidas(self):
-        pos = self._moverPeca
-        l = pos.linha
-        c = pos.col
-        if l < 8:
-            cols = [(l,c+2),(l,c-2),
-            (l+1,c),(l+1,c+2),
-            (l-1,c), (l-1,c-2)]
-        elif l == 8:
-            cols = [(l,c+2),(l,c-2),
-            (l+1,c+1),(l+1,c-1),
-            (l-1,c),(l-1,c-2)]
-        elif l == 9:
-            cols = [(l,c+2),(l,c-2),
-            (l+1,c),(l+1,c-2),
-            (l-1,c+1),(l-1,c-1)]
-        else:
-            cols = [(l,c+2),(l,c-2),
-            (l+1,c),(l+1,c-2),
-            (l-1,c),(l-1,c+2)]
- 
-        for i in cols:
-            l,c = i
-            if(l>=0 and c >= 0):
-                try:
-                    p = self._matrizTabuleiro[l][c]
-                    if p.peca == None:
-                        if p.cor == 0:
-                            cor = (0,0,0)
-                        else:
-                            cor = (255,255,255)
-                        pg.draw.circle(self._tela,cor,(p.posicao.x + 25,p.posicao.y +22,),5) 
-                except IndexError:
-                    pass
-
+#captura/ encerramento partida
     def avaliarCapturas(self, pos):
-        return self._tabuleiro.avaliarCapturas(pos)
+        notificacao = self._tabuleiro.avaliarCapturas(pos)
+        if notificacao != None:
+            self.notificacao = notificacao
 
     def avaliarEncerramentoPartida(self):
         return self._tabuleiro.avaliarEncerramentoPartida()

@@ -1,4 +1,3 @@
-import re
 from pygame import *
 from jogador import Jogador
 from posicao import Posisao
@@ -12,14 +11,11 @@ class Tabuleiro():
         self._tabuleiro = []
 
         self._jogadorVez = self._jogador1
-        
 
+#getters
     def jogadorVez(self):
         return self._jogadorVez
   
-    def matriz(self):
-        return self._tabuleiro
-
     def jogador1(self):
         return self._jogador1
 
@@ -29,10 +25,14 @@ class Tabuleiro():
     def vencedor(self):
         return self._vencedor
 
-    def matrizTabuleiro(self):
+    def matriz(self):
+        return self._tabuleiro
+
+#matriz tabuleiro
+    def construirMatrizTabuleiro(self):
         #construção da matriz do tabuleiro
         t_altura = 44
-        t_largura = 50
+        #t_largura = 50
         #meio ponto 325 , x_meio 325 - 25 (metade da largura do triangulo)
         meio = 325 -25
         triangulos = 5
@@ -47,18 +47,16 @@ class Tabuleiro():
             for t in range(triangulos):
                 #negativo
                 if t+1< triangulos//2+1:
-                    rect = Rect((meio -25*x+25*t, t_altura*l + 100),(50,44))
-                    self._tabuleiro[l].append(Posisao(jogador,cor,rect,t,l))  
+                    rect = Rect((meio -25*x+25*t, t_altura*l + 100),(50,44))   
                 #neutro
                 elif t+1== triangulos//2+1:
                     rect = Rect((meio, t_altura*l + 100),(50,44))
-                    self._tabuleiro[l].append(Posisao(jogador,cor,rect,t,l))
                     x = 1
                 #positivo
                 else:
                     rect = Rect((meio + 25*x, t_altura*l + 100),(50,44))
-                    self._tabuleiro[l].append(Posisao(jogador,cor,rect,t,l))
                     x += 1
+                self._tabuleiro[l].append(Posisao(jogador,cor,rect,t,l))
                 if cor == 1:
                     cor = 0
                     jogador = self._jogador1
@@ -72,131 +70,85 @@ class Tabuleiro():
             else:
                 triangulos += 2
 
+#prox jogador
     def habilitarOutroJogador(self):
         if self._jogadorVez == self._jogador1:
             self._jogadorVez = self._jogador2
         else:
             self._jogadorVez = self._jogador1
 
+#movimentacao peca
     def efetuarMovimentacaoPeca(self, peca, pos):
         pos.peca = peca.peca
         peca.peca = None
 
     def avaliarPosicao(self, peca, pos):
+        valida = False
         #posicao vazia
         if pos.peca == None:
             #mesma cor
             if peca.cor == pos.cor:
-                cor = peca.cor
-                #pretas
-                if cor == 0:
-                    cols = []
-                    if 8 == peca.linha and  pos.linha== 9 or 9 == peca.linha and  pos.linha== 8:
-                        cols = [peca.col-1,peca.col+1]
-                    else:
-                        if peca.linha == pos.linha:
-                            cols = [peca.col+2,peca.col-2]
-                           
-                        elif peca.linha +1  == pos.linha:
-                            if peca.linha>8 and pos.linha>8:
-                                cols = [peca.col,peca.col-2]
-                            else:   
-                                cols = [peca.col,peca.col+2]
-                            
-                        elif peca.linha -1  == pos.linha:
-                            if peca.linha>8 and pos.linha>8:
-                                cols = [peca.col,peca.col+2]
-                            else:   
-                                cols = [peca.col,peca.col-2]
-                    
-                    if pos.col in cols:
-                        return True
-                #brancas
-                else:
-                    cols = []
-                    if 8 == peca.linha and  pos.linha== 9 or 9 == peca.linha and  pos.linha== 8:
-                        cols = [peca.col-1,peca.col+1]
-                    else:
-                        if peca.linha == pos.linha:
-                            cols = [peca.col+2,peca.col-2]
-                           
-                        elif peca.linha +1  == pos.linha:
-                            if peca.linha>8 and pos.linha>8:
-                                cols = [peca.col,peca.col-2]
-                            else:   
-                                cols = [peca.col,peca.col+2]
-                            
-                        elif peca.linha -1  == pos.linha:
-                            if peca.linha>8 and pos.linha>8:
-                                cols = [peca.col,peca.col+2]
-                            else:   
-                                cols = [peca.col,peca.col-2]
-                           
-                    if pos.col in cols:
-                        return True
-        return False  
- 
+                posicoesValidas = self.posicoesAdjacentes(peca, 'V')           
+                if pos in posicoesValidas:
+                    valida = True
+        return valida  
 
-    def avaliarEncerramentoPartida(self):
-        #verifica a existencia de um vencedor
-        j1 = self._jogador1.totalPecas <= 2
-        j2 = self._jogador2.totalPecas <= 2
-        if j1:
-            self._vencedor = self._jogador2
-            return True
-        elif j2 :
-            self._vencedor = self._jogador1
-            return True
-    
+#captura peca  
     def avaliarCapturas(self, pos):
+        notificacao = None
         if self.verificaCapturaAdversario(pos):
-            return 3
+            notificacao = 3
         else:
             if self.verificaCapturaJogador(pos):
-                return 4
+                notificacao = 4
+        return notificacao
 
     def verificaCapturaAdversario(self, pos):
         #verifica se o movimento do jogador ocasionou uma captura de peca do adversario
-        cor = pos.cor
-        if cor == 0:
+        captura = False
+    
+        if pos.cor == 0:
             cap = 11
             capAdv = 22 
         else:
             cap = 22
             capAdv = 11 
        
-        pos_adjP = self.pecaPosicoesAdjacentes(pos)
+        pos_adjJ = self.posicoesAdjacentes(pos, 'A')
+
         pos_cont = 0
-        for _ in range(len(pos_adjP)):
-            if pos_adjP[pos_cont].peca != None:
-                pos_adjB = self.pecaPosicoesAdjacentes(pos_adjP[pos_cont])
-               
+        for _ in range(len(pos_adjJ)):
+            if pos_adjJ[pos_cont].peca != None:
+                pos_adjA = self.posicoesAdjacentes(pos_adjJ[pos_cont], 'A')
+
                 pecas = 0
                 cont_cap = 0
-                for p in pos_adjB:
+                for p in pos_adjA:
                     if p.peca != None:
                         pecas += 1
                         if p.peca == cap:
                             cont_cap += 1
-                if self.verificaPecaLimiteTabuleiro(pos_adjP[pos_cont]):
+                if self.verificaPecaLimiteTabuleiro(pos_adjJ[pos_cont]):
                     if pecas == 2 and cont_cap >= 1:
-                        return self.realizarCapturaPeca(pos_adjP[pos_cont])
-                elif pos_adjP[pos_cont].peca == capAdv and pecas == 3 and cont_cap >= 1:
-                    return self.realizarCapturaPeca(pos_adjP[pos_cont])
-                elif not(pos_adjP[pos_cont].peca == capAdv) and pecas == 3:
-                    return self.realizarCapturaPeca(pos_adjP[pos_cont])
+                        captura = True
+                        break
+                elif pos_adjJ[pos_cont].peca == capAdv and pecas == 3 and cont_cap >= 1:
+                    captura = True
+                    break
+                elif not(pos_adjJ[pos_cont].peca == capAdv) and pecas == 3:
+                    captura = True
+                    break
                 else:
                     pos_cont += 1
             else:
                 pos_cont += 1
- 
-    def realizarCapturaPeca(self, pos):
-        pos.jogador.totalPecas -= 1
-        pos.peca = None
-        return True
+        if captura:
+            return self.realizarCapturaPeca(pos_adjJ[pos_cont])
 
     def verificaCapturaJogador(self, pos):
-        #verifica se o movimento do jogador ocasionou uma captura de peca do adversario
+        #verifica se o movimento do jogador ocasionou uma captura da sua peca
+        captura = False
+
         cor = pos.cor
         if cor == 0:
             cap = 11
@@ -205,144 +157,145 @@ class Tabuleiro():
             cap = 22
             capAdv = 11 
 
-        pos_adjP = self.pecaPosicoesAdjacentes(pos)    
-        pos_cont = 0
-        for _ in range(len(pos_adjP)):
-            pecas = 0
-            cont_cap = 0
-            for p in pos_adjP:
-                if p.peca != None:
-                    pecas += 1
-                    if p.peca == capAdv:
-                        cont_cap += 1
-            if self.verificaPecaLimiteTabuleiro(pos):
-                if pecas == 2 and cont_cap >= 1:
-                    return self.realizarCapturaPeca(pos)
-            elif pos.peca == cap and pecas == 3 and cont_cap >= 1:
-                return self.realizarCapturaPeca(pos)
-            elif not(pos.peca == cap) and pecas == 3:
-                return self.realizarCapturaPeca(pos)
-            else:
-                pos_cont += 1
+        pos_adjJ = self.posicoesAdjacentes(pos, 'A')    
+
+        pecas = 0
+        cont_cap = 0
+        for p in pos_adjJ:
+            if p.peca != None:
+                pecas += 1
+                if p.peca == capAdv:
+                    cont_cap += 1
+        if self.verificaPecaLimiteTabuleiro(pos):
+            if pecas == 2 and cont_cap >= 1:
+                captura = True
+        elif pos.peca == cap and pecas == 3 and cont_cap >= 1:
+            captura = True
+        elif not(pos.peca == cap) and pecas == 3:
+            captura = True
+
+        if captura:
+            return self.realizarCapturaPeca(pos)
+ 
+    def realizarCapturaPeca(self, pos):
+        pos.jogador.totalPecas -= 1
+        pos.peca = None
+        return True
+
+#avalia encerramento
+    def avaliarEncerramentoPartida(self):
+        #verifica a existencia de um vencedor
+        j1 = self._jogador1.totalPecas <= 2
+        j2 = self._jogador2.totalPecas <= 2
+        if j1:
+            self._vencedor = self._jogador2 
+        elif j2 :
+            self._vencedor = self._jogador1
             
-           
+        if self._vencedor != None:
+            return True
+
+#metodos auxiliares            
     def verificaPecaLimiteTabuleiro(self, pos):
         col = pos.col
         linha = pos.linha
         cor = pos.cor
 
+        limite = False
+
         if linha == 0 and cor == 0:
-            return True
+            limite = True
         elif linha == 10 and cor == 1 :
-            return True
+            limite = True
         elif col == 0 :
-            return True
+            limite = True
         else:
-            
             if linha <= 8:
                 l = 0
                 c = 4
                 for i in range(9):
                     if l == linha and col == c:
-                        return True
+                        limite = True
+                        break
                     else:
                         l += 1
                         c += 2
             else:
                 if (linha == 9 and col == 20) or (linha == 10 and col == 18):
-                    return True
-              
-    def pecaPosicoesAdjacentes(self, pos):
-        linha = pos.linha
-        col = pos.col
-        cor = pos.cor
-        if cor == 0:
-            if self.verificaPecaLimiteTabuleiro(pos):
-                if linha == 0:
-                    pos_adjP = [self.matriz()[linha][col -1]
-                        ,self.matriz()[linha][col +1]
-                    ]
-                else:
-                    if pos.col == 0:
-                        pos_AdjP_Linha = {
-                            9 : [self.matriz()[linha-1][col]
-                                ,self.matriz()[linha][col +1]
-                                ],
-                            10 : [self.matriz()[linha-1][col+1]
-                                ,self.matriz()[linha][col +1]
-                                ]
-                        }
-                        pos_adjP = pos_AdjP_Linha[linha]
-                    else:
-                        if linha == 9:
-                            pos_adjP = [self.matriz()[linha-1][col]
-                                ,self.matriz()[linha][col -1]
-                            ]
-                        else:
-                            pos_adjP =[self.matriz()[linha-1][col+1]
-                                ,self.matriz()[linha][col -1]
-                            ]
+                    limite = True
+
+        return limite
+
+    def arestaPosicoesAdjacentes(self, pos):
+        #posicoes adjacentes as arestas do triangulo
+        #pos que pertencem ao adversario
+        l = pos.linha
+        c = pos.col
+        
+        if pos.cor == 0:
+            #pretas
+            if l <= 8:
+                cols = [(l,c+1),(l,c-1),
+                (l-1,c-1)]
+            elif l == 9:
+                cols = [(l,c+1),(l,c-1),
+                (l-1,c)]
             else:
-                if linha <= 8:
-                    pos_adjP = [self.matriz()[linha-1][col -1]
-                        ,self.matriz()[linha][col -1]
-                        ,self.matriz()[linha][col +1]
-                        ]
-                else:
-                    pos_AdjP_Linha = {
-                        8 : [self.matriz()[linha-1][col -1]
-                            ,self.matriz()[linha][col -1]
-                            ,self.matriz()[linha][col +1]
-                            ],
-                        9 : [self.matriz()[linha-1][col]
-                            ,self.matriz()[linha][col -1]
-                            ,self.matriz()[linha][col +1]
-                            ],
-                        10 : [self.matriz()[linha-1][col+1]
-                            ,self.matriz()[linha][col -1]
-                            ,self.matriz()[linha][col +1]
-                            ]
-                    }
-                    pos_adjP = pos_AdjP_Linha[linha]
+                cols = [(l,c+1),(l,c-1),
+                (l-1,c+1)]
         else:
-            if self.verificaPecaLimiteTabuleiro(pos):
-                if linha < 8:
-                    if pos.col == 0:
-                        pos_adjP = [self.matriz()[linha+1][col +1]
-                                ,self.matriz()[linha][col +1]
-                        ]
-                    else:
-                        pos_adjP = [self.matriz()[linha+1][col +1]
-                            ,self.matriz()[linha][col -1]
-                        ]
-                elif linha == 8:
-                    if pos.col == 0:
-                        pos_adjP = [self.matriz()[linha+1][col]
-                                ,self.matriz()[linha][col +1]
-                        ]
-                    else:
-                        pos_adjP = [self.matriz()[linha+1][col]
-                            ,self.matriz()[linha][col -1]
-                        ]
-                else:
-                    pos_adjP = [self.matriz()[linha][col -1]
-                            ,self.matriz()[linha][col +1]
-                    ]
-            else:
-                if linha < 8:
-                    pos_adjP = [self.matriz()[linha+1][col+1]
-                    ,self.matriz()[linha][col -1]
-                    ,self.matriz()[linha][col +1]
-                    ]
-                else:
-                    if linha == 8:
-                        pos_adjP = [self.matriz()[linha+1][col]
-                            ,self.matriz()[linha][col -1]
-                            ,self.matriz()[linha][col +1]
-                            ]
-                    else:
-                        pos_adjP = [self.matriz()[linha+1][col-1]
-                            ,self.matriz()[linha][col -1]
-                            ,self.matriz()[linha][col +1]
-                            ]
-        return pos_adjP
+            #brancas
+            if l < 8:
+                cols = [(l,c+1),(l,c-1),
+                (l+1,c+1)]
+            elif l == 8:
+                cols = [(l,c+1),(l,c-1),
+                (l+1,c)]
+            elif l >= 9:
+                cols = [(l,c+1),(l,c-1),
+                (l+1,c-1)]
+
+        return cols
+
+    def verticePosicoesAdjacentes(self, pos):
+        #pos adjacentes ao vertice do triangulo
+        #pos para onde pode mover a peca
+        l = pos.linha
+        c = pos.col
+        if l < 8:
+            cols = [(l,c+2),(l,c-2),
+            (l+1,c),(l+1,c+2),
+            (l-1,c), (l-1,c-2)]
+        elif l == 8:
+            cols = [(l,c+2),(l,c-2),
+            (l+1,c+1),(l+1,c-1),
+            (l-1,c),(l-1,c-2)]
+        elif l == 9:
+            cols = [(l,c+2),(l,c-2),
+            (l+1,c),(l+1,c-2),
+            (l-1,c+1),(l-1,c-1)]
+        else:
+            cols = [(l,c+2),(l,c-2),
+            (l+1,c),(l+1,c-2),
+            (l-1,c),(l-1,c+2)]
+
+        return cols
+
+    def posicoesAdjacentes(self, pos, tipo):
+        # V - vertice
+        # A - aresta
+        if tipo == 'V':
+            cols = self.verticePosicoesAdjacentes(pos)
+        else:
+            cols = self.arestaPosicoesAdjacentes(pos)
+
+        pos = []
+        for i in cols:
+            l,c = i
+            if(l>=0 and c >= 0):
+                try:
+                    pos.append(self._tabuleiro[l][c])
+                except IndexError:
+                    pass
+
+        return pos
