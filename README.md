@@ -30,7 +30,7 @@ do tabuleiro cercando-a com apenas duas peças, mas
 uma delas deve ser um capitão.
 
 ### Desenvolvido com Python; biblioteca Pygame
-
+### [Modelagem UML e Especificação de Requisitos](https://drive.google.com/drive/folders/1krmnWdyLZ1MKKra8rcMVhRIcrOe7pdrf?usp=sharing)
 Referências
-https://youtu.be/n03VBTZ4qgI
-https://www.ludopedia.com.br/jogo/bizingo
+- https://youtu.be/n03VBTZ4qgI
+- https://www.ludopedia.com.br/jogo/bizingo
