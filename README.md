@@ -1,9 +1,12 @@
 # Bizingo
 Trabalho da disciplina Análise e Projeto de Sistemas da Universidade Federal de Santa Catarina (UFSC)
-
 Bizingo é um jogo de tabuleiro, de dois jogadores, cujo objetivo é
 reduzir as peças do oponente a 2 (dois), o jogo contém dois tipos de peças: as
 peças normais (16 por jogador) e o capitão (2 por jogador).
+
+## Requisitos
+* python - v 3.8
+* pygame - v 2.0
 
 ## Movimentação das peças:
 Cada jogador em seu turno move uma de suas peças, obedecendo às
